@@ -1,6 +1,6 @@
 use Bailador;
 use Bailador::Template::Mustache;
-use JSON::Fast;
+use JSON::Tiny;
 
 Bailador::import();
 
