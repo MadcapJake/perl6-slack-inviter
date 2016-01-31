@@ -57,4 +57,4 @@ get '/css/style.css' => sub {
   slurp './css/style.css'
 }
 
-baile;
+baile(%*ENV<PORT>);
