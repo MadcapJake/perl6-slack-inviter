@@ -4,6 +4,7 @@ use JSON::Fast;
 
 use lib 'lib';
 use Slack;
+use Badge;
 
 Bailador::import();
 
@@ -53,6 +54,25 @@ post '/invite' => sub {
 get '/css/style.css' => sub {
   content_type('text/css');
   slurp './css/style.css'
+}
+
+get '/badge.svg' => sub {
+  content_type('image/svg+xml');
+  # TODO: get total and active, pass to Badge.new
+  my $req = $slack.usrdat-request(); my ($total, $active);
+  $req.stdout.tap(-> $res {
+    given $res {
+      my @presences = m:global/\"presence\"\: \"[away|active]\"/;
+      $total += @presences.elems;
+      $active += @presences
+        .map({$_.Str.index('active').defined ?? 1 !! 0})
+        .reduce: *+*;
+    }
+  });
+  await $req.start;
+  say "Total: $total";
+  say "Active: $active";
+  Badge.new(:$total, :$active).Str;
 }
 
 baile(+%*ENV<PORT>);
