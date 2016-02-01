@@ -2,11 +2,15 @@ use Bailador;
 use Bailador::Template::Mustache;
 use JSON::Fast;
 
+use lib 'lib';
+use Slack;
+
 Bailador::import();
 
 my $community = 'Perl 6';
 my $slack-url = 'perl6.slack.com';
 my $token     = %*ENV<SLACK_TOKEN>;
+my $slack     = Slack.new(:$token, :url($slack-url));
 
 my %templates =
   from => './views',
@@ -18,16 +22,10 @@ get '/' => sub {
 }
 
 post '/invite' => sub {
-  my $curl = Proc::Async.new('curl', '-X', 'POST',
-    "https://$slack-url/api/users.admin.invite",
-    '--data',
-      'email=' ~ request.params<email> ~
-      '&token=' ~ $token ~
-      '&set_active=true',
-    '--compressed');
+  my $req = $slack.invite-request(request.params<email>);
   my %res;
-  $curl.stdout.tap(-> $json { %res = from-json($json) });
-  await $curl.start;
+  $req.stdout.tap(-> $json { %res = from-json($json) });
+  await $req.start;
   say %res;
   if %res<ok>.so {
     return Template::Mustache.render(slurp('./views/result.hbs'), {
@@ -57,5 +55,5 @@ get '/css/style.css' => sub {
   slurp './css/style.css'
 }
 
-baile(%*ENV<PORT>);
-say 'Running bailador app on port:' ~ $*ENV<PORT>;
+baile(+%*ENV<PORT>);
+say 'Running bailador app on port:' ~ %*ENV<PORT>;
