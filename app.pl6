@@ -1,6 +1,6 @@
 use Bailador;
 use Bailador::Template::Mustache;
-use JSON::Tiny;
+use JSON::Fast;
 
 Bailador::import();
 
@@ -58,4 +58,4 @@ get '/css/style.css' => sub {
 }
 
 baile(%*ENV<PORT>);
-say 'Running bailador app on port:' ~ $*ENV<PORT>;
+# say 'Running bailador app on port:' ~ $*ENV<PORT>;
