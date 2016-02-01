@@ -19,7 +19,8 @@ method slack-request($http-meth, $api-url, *%data) {
   }
 }
 
-method invite-request($email) {
+method invite-request($email is copy) {
+  $email .= subst(/\+/, '%2b');
   self.slack-request('POST', 'users.admin.invite', :$email, :set-active)
 }
 
