@@ -76,4 +76,4 @@ get '/badge.svg' => sub {
 }
 
 baile(+%*ENV<PORT>);
-say 'Running bailador app on port:' ~ %*ENV<PORT>;
+# say 'Running bailador app on port:' ~ %*ENV<PORT>;
