@@ -56,22 +56,26 @@ get '/css/style.css' => sub {
   slurp './css/style.css'
 }
 
+my regex present { '"'presence'":"'[away|active]'"' }
 get '/badge.svg' => sub {
   content_type('image/svg+xml');
-  # TODO: get total and active, pass to Badge.new
-  my $req = $slack.usrdat-request(); my ($total, $active);
-  $req.stdout.tap(-> $res {
-    given $res {
-      my @presences = m:global/\"presence\"\: \"[away|active]\"/;
-      $total += @presences.elems;
-      $active += @presences
-        .map({$_.Str.index('active').defined ?? 1 !! 0})
-        .reduce: *+*;
-    }
-  });
+
+  my ($total, $active);
+  state @prev = (0, 0);
+  my $req = $slack.usrdat-request();
+  my @chunks; $req.stdout.tap(-> $res { @chunks.push: $res });
+
   await $req.start;
-  say "Total: $total";
-  say "Active: $active";
+
+  if @chunks[0].contains('"ok":true') {
+    my @presences = @chunks.join ~~ m:global{<present>};
+    $total += @presences.flat.elems;
+    $active += @presences.flat
+      .map({ $_.Str.index('active').defined ?? 1 !! 0 })
+      .reduce: *+*;
+    @prev = ($total, $active);
+  } else { ($total, $active) = @prev }
+
   Badge.new(:$total, :$active).Str;
 }
 
